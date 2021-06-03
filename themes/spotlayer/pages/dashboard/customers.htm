@@ -1,0 +1,481 @@
+title = "Customer List"
+url = "/dashboard/customers/:type"
+layout = "admin"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "dashboard/dashboard"
+menu_breadcrumb = "customers"
+hide_crumb = 0
+remove_crumb_trail = 0
+crumb_disabled = 0
+
+[viewBag]
+localeTitle[ar] = "إدارة الطلبات"
+==
+<?php
+use ItScholarBd\Api\Classes\Action;
+use ItScholarBd\Api\Models\Voucher;
+function onStart(){
+    if(!Auth::getUser()->hasUserPermission(["shop"],'r')) {
+        \Flash::error($this['theme_lang']['not_allowed']);
+    }
+}
+
+function onAssignVoucher()
+{
+    $data = post();
+    Action::assignVoucher($data);
+
+    \Flash::success($this['theme_lang']['updated_successfully']);
+    return Redirect::back();
+}
+function onUpdateVoucher()
+{
+    $data = post();
+    Action::updateVoucher($data);
+
+    \Flash::success($this['theme_lang']['updated_successfully']);
+    return Redirect::back();
+}
+function onBlock()
+{
+    $data = post();
+    Action::blockShop($data['id']);
+
+    \Flash::success($this['theme_lang']['updated_successfully']);
+    return Redirect::back();
+}
+
+?>
+==
+<!--begin::Portlet-->
+<div class="kt-portlet kt-portlet--tabs">
+    <div class="kt-portlet__body">
+        
+            <div class="kt-datatable"></div>
+        
+    </div>
+</div>
+
+<div class="modal fade" id="assign_voucher" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" >{{'Assign Voucher'|__}}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            {{ form_ajax('onAssignVoucher', { success: 'created successfully!', flash: true, class: 'kt_form' }) }}
+                <div class="modal-body">
+                     <input type="hidden" name="customerId" class="customerId">
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'Title'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input class="form-control " name="title" required>
+                        </div>
+                    </div> 
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'CODE'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input class="form-control " name="code" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'Discount'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                             <div class="input-group">
+                                {% if primary_currency.place_symbol_before == 1 %}
+                                <div class="input-group-prepend"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                                <input class="form-control decimal" name="discount"  required>
+                                {% if primary_currency.place_symbol_before == 0 %}
+                                <div class="input-group-append"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                            </div> 
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'Minimum Order'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                              <div class="input-group">
+                                {% if primary_currency.place_symbol_before == 1 %}
+                                <div class="input-group-prepend"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                                <input class="form-control decimal" name="min_order"  required>
+                                {% if primary_currency.place_symbol_before == 0 %}
+                                <div class="input-group-append"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                            </div> 
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-12">
+                            <label>{{'Validity'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input type="text" id="datetimepicker" class="form-control" name="validity" required>
+
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary refresh" data-dismiss="modal">{{'Close'|__}}</button>
+                    <button type="submit" class="btn btn-primary">{{'Assign'|__}}</button>
+                </div>
+            {{ form_close() }}
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="edit_voucher" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" >{{'Update Voucher'|__}}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            {{ form_ajax('onUpdateVoucher', { success: 'created successfully!', flash: true, class: 'kt_form' }) }}
+                <div class="modal-body">
+                     <input type="hidden" name="customerId" class="customerId">
+                     <input type="hidden" name="voucher_id" class="voucher_id">
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'Title'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input class="form-control title" name="title"  required>
+                       
+                        </div>
+                    </div>  
+                     <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'CODE'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input class="form-control code" name="code"  required>
+                       
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'Discount'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                              <div class="input-group">
+                                {% if primary_currency.place_symbol_before == 1 %}
+                                <div class="input-group-prepend"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                                <input class="form-control decimal discount" name="discount"  required>
+                                {% if primary_currency.place_symbol_before == 0 %}
+                                <div class="input-group-append"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                            </div> 
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'Minimum Order'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                              <div class="input-group">
+                                {% if primary_currency.place_symbol_before == 1 %}
+                                <div class="input-group-prepend"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                                <input class="form-control decimal min_order" name="min_order"  required>
+                                {% if primary_currency.place_symbol_before == 0 %}
+                                <div class="input-group-append"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                            </div> 
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-12">
+                            <label>{{'Validity'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input type="text" id="datetimepicker2" class="form-control validity" name="validity"  required>
+
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary refresh" data-dismiss="modal">{{'Close'|__}}</button>
+                    <button type="submit" class="btn btn-primary">{{'Update'|__}}</button>
+                </div>
+            {{ form_close() }}
+        </div>
+    </div>
+</div>
+
+
+{% put scripts %}
+<script type="text/javascript">
+"use strict";
+var KTAppUserListDatatable = function () {
+    var datatable;
+    var init = function (type) {
+            var columns = [
+                {
+                    field: "customer",
+                    title: "{{'Customer'|__}}",
+                    sortable: false,
+                    width: 'auto'
+                },
+                {
+                    field: "order",
+                    title: "{{'Order Detail'|__}}",
+                    sortable: false,
+                    width: 'auto',
+                    template: function (data){
+                      var  output = '<ul>';
+                        output += '<li><strong>Total Order: </strong>'+data.order.quantity+'</li>';
+                        output += '<li><strong>Last Order: </strong>'+data.order.date+'</li>';
+                        output += '<li><strong>Total Spent: </strong>'+data.spent+' '+data.currency+ '</li>';
+                        output += '</ul>';
+                      return output;  
+                    }
+                },
+                {
+                    field: "voucher",
+                    title: "{{'Voucher Detail'|__}}",
+                    sortable: false,
+                    width: 'auto',
+                    template: function (data) {
+                       var output = '<span class="'+ALERTPRE+ALERTCLASS[0]+'">No Active Voucher</span>';
+                        if(data.voucher.active){
+                          output = '<ul>';
+                          output += '<li><strong>CODE: </strong>'+data.voucher.code+'</li>';
+                          output += '<li><strong>Discount: </strong>'+data.voucher.discount+' '+data.currency+'</li>';
+                          output += '<li><strong>Minimum Order: </strong>'+data.voucher.min_order+' '+data.currency+'</li>';
+                          output += '<li><strong>Validity: </strong>'+data.voucher.validity+'</li>';
+                          output += '</ul>';
+                        }
+                      return output;  
+                    }
+
+                },
+ 
+                {
+                    field: "Actions",
+                    width: 100,
+                    title: "{{'Actions'|__}}",
+                    sortable: false,
+                    overflow: 'visible',
+                    template: function (data) {
+                        console.log(JSON.stringify(data.voucher));
+                        var output = ''; 
+                         if(!data.voucher.active){
+                            output += '<a href="javascript:;" data-toggle="modal" data-target="#assign_voucher"  data-userid='+data.customerId+' class="btn btn-brand btn-sm btn-icon setCustomerId" data-skin="dark" title="{{"Gift a Voucher"|__}}"><i class="la la-gift"></i></button>'; 
+                         }
+                        if(data.voucher.active){
+                            //console.log(JSON.stringify(data.voucher.validity));
+                            var allData = { "voucher_id": data.voucher.id, 
+                                            "user_id": data.customerId, 
+                                            "title": data.voucher.title,
+                                            "code": data.voucher.code,
+                                            "validity": data.voucher.validity,
+                                            "discount": data.voucher.discount,
+                                            "min_order": data.voucher.min_order
+                                          }
+                              // console.log('all',allData);    
+                              // console.log(JSON.stringify(allData));       
+                            output += '<a href="javascript:;" data-toggle="modal" data-target="#edit_voucher"  data-all=\''+JSON.stringify(allData)+'\' class="btn btn-brand btn-sm btn-icon update-voucher-modal" data-skin="dark" title="{{"Edit this Voucher"|__}}"><i class="la la-pencil"></i></button>'; 
+                         }
+                         
+
+                        return output;
+                    },
+                }
+            ]
+        
+
+        datatable = $('.kt-datatable').KTDatatable({
+            translate: {
+                records: {
+                    processing: '{{"Please wait"|__}}...',
+                    noRecords: '{{"No records found"|__}}'
+                },
+                toolbar: {
+                    pagination: {
+                        items: {
+                            default: {
+                                first: '{{"First"|__}}',
+                                prev: '{{"Previous"|__}}',
+                                next: '{{"Next"|__}}',
+                                last: '{{"Last"|__}}',
+                                more: '{{"More pages"|__}}',
+                                input: '{{"Page number"|__}}',
+                                select: '{{"Select page size"|__}}'
+                            },
+
+                            info: "{{"Displaying"|__}} {{ '{{' }}start{{ '}}' }} - {{ '{{' }}end{{ '}}' }} {{"of"|__}} {{total}} {{"records"|__}}"
+                        }
+                    }
+                }
+            },
+
+            // layout definition
+            layout: {
+                scroll: true, // enable/disable datatable scroll both horizontal and vertical when needed.
+                footer: false, // display/hide footer
+            },
+
+            // column sorting
+            sortable: true,
+
+            pagination: true,
+
+            search: {
+                input: $('#generalSearch'),
+                delay: 400,
+            },
+            data: {
+                type: 'remote',
+                source: {
+                    read: {
+                        url: '{{url("api/customers")}}/'+type,
+                    },
+                },
+                pageSize: 10, // display 20 records per page
+                serverPaging: true,
+                serverFiltering: true,
+                serverSorting: true,
+            },
+            // columns definition
+            columns: columns
+        });
+
+
+        return datatable;
+    };
+
+    // search
+    var search = function () {
+        $('#filter_form select,#filter_form input').each(function(){
+            $(this).on('change', function () {
+                datatable.search($(this).val().toLowerCase(), $(this).attr('name'));
+            });
+        });
+        $('#reset').on('click', function () {
+            datatable.destroy();
+            $('#generalSearch').val('');
+            $('#filter_form select,#filter_form input').each(function(){
+                $(this).val('');
+            });
+            $('#filter_form select').each(function(){
+                $(this).selectpicker("refresh");
+            });
+            init();
+        });
+    };
+
+
+
+    var reload = function () {
+        datatable.reload();
+    };
+
+  
+
+    var destroy = function () {
+        datatable.destroy();
+        $('#generalSearch').val('');
+        $('#filter_form select,#filter_form input').each(function(){
+            $(this).val('');
+        });
+        $('#filter_form select').each(function(){
+            $(this).selectpicker("refresh");
+        });
+    };
+
+    return {
+        // public functions
+        init: function (type) {
+            init(type);
+        },
+
+        reload: function(){
+            reload();
+        },
+
+        destroy: function(){
+            destroy();
+        },
+
+        filter: function(status){
+            filter(status);
+        }
+    };
+}();
+
+KTUtil.ready(function () {
+    $('.kt_subheader_filter_form').on('submit', function (e) {
+        e.preventDefault();
+        if($(this).find("button").hasClass('active')){
+            $('.kt_subheader_filter_form button').removeClass('active');
+            $("#filter_selected").html('');
+            KTAppUserListDatatable.filter(0);
+        }else{
+            $('.kt_subheader_filter_form button').removeClass('active');
+            $("#filter_selected").html(':&nbsp;'+$(this).find("button").text());
+            $(this).find("button").addClass('active');
+            var status = $(this).find("input.filter").val();
+            KTAppUserListDatatable.filter(status);
+        }
+    });
+  KTAppUserListDatatable.init('{{this.param.type}}');
+
+  $('body').on('click','.assign-gift-voucher', function(e){
+        e.preventDefault();
+        var orderId = $(this).data('id');
+        
+        KTApp.blockPage({
+            overlayColor: '#000000',
+            type: 'v2',
+            state: 'success',
+            message: '{{"Please wait"|__}}...'
+        });
+        $.request('onAssignVoucher', {
+            data: {id: orderId},
+            success: function(data) {
+                KTApp.unblockPage();
+                window.location.reload();
+                
+            }
+        });
+});
+
+$('body').on('click','.block-shop', function(e){
+        e.preventDefault();
+        var orderId = $(this).data('id');
+        
+        KTApp.blockPage({
+            overlayColor: '#000000',
+            type: 'v2',
+            state: 'success',
+            message: '{{"Please wait"|__}}...'
+        });
+        $.request('onBlock', {
+            data: {id: orderId},
+            success: function(data) {
+                console.log(data);
+                
+                KTApp.unblockPage();
+                window.location.reload();
+                
+            }
+        });
+});
+});
+
+$('body').on('click','.setCustomerId',function(e){
+    var customerId = $(this).data('userid');
+    
+    $('.customerId').val(customerId);
+});
+
+$('body').on('click','.update-voucher-modal',function(e){
+    var data = $(this).data('all');
+    console.log(data);
+    $('.customerId').val(data.user_id);
+    $('.voucher_id').val(data.voucher_id);
+    $('.title').val(data.title);
+    $('.code').val(data.code);
+    $('.discount').val(data.discount);
+    $('.min_order').val(data.min_order);
+    $('.validity').val(data.validity);
+});
+
+
+
+</script>
+{% endput %}

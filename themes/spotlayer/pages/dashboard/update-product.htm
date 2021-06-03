@@ -1,0 +1,226 @@
+title = "Update Product"
+url = "/dashboard/update-product/:shop_id"
+layout = "admin"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "dashboard/shops"
+menu_breadcrumb = "shop"
+hide_crumb = 0
+remove_crumb_trail = 0
+crumb_disabled = 0
+
+[viewBag]
+==
+<?php
+use System\Models\File;
+use ItScholarBd\Api\Models\Shop;
+use ItScholarBd\Api\Models\Product;
+
+function onStart() {
+
+if(!Auth::getUser()->hasUserPermission(["shop"],'c')) {
+
+\Flash::error($this['theme_lang']['not_allowed']);
+return Redirect::to('dashboard/settings');
+}
+
+$this['shop'] = Shop::find($this->param('shop_id'))->get();
+$this['products'] = Product::with('logo')->where('shop_id',$this->param('shop_id'))->get();
+}
+
+function onSave()
+{
+    if(!Auth::getUser()->hasUserPermission(["shop"],'c')) {
+    throw new ApplicationException($this['theme_lang']['not_allowed']);
+}
+$ids = [];
+$data = post();
+$files = Input::file(); 
+
+if(isset($data['products'])){
+
+foreach($data['products'] as $index => $productData){
+
+if(isset($productData['id'])){
+
+$ids[]   =   $productData['id'];
+$product =  Product::find($productData['id']);
+
+$product->shop_id         = $this->param('shop_id');
+$product->name            = $productData['name'];
+$product->description     = $productData['description'];
+$product->price           = $productData['price'];
+
+if(isset($files['products'][$index]['logo'])){
+$product->logo      = $files['products'][$index]['logo'];
+} 
+
+$product->updated_at      = \Carbon\Carbon::now();
+$product->update();
+}else{
+
+$product                  = new Product;
+$product->shop_id         = $this->param('shop_id');
+$product->name            = $productData['name'];
+$product->description     = $productData['description'];
+$product->price           = $productData['price'];
+if(isset($files['products'][$index]['logo'])){
+$product->logo      = $files['products'][$index]['logo'];
+} 
+$product->updated_at      = \Carbon\Carbon::now();
+$product->save();
+
+$ids[]  =   $product->id;
+}
+}
+}
+Product::whereNotIn('id', $ids)->where('shop_id',$this->param('shop_id'))->delete();
+
+\Flash::success($this['theme_lang']['created_successfully']);
+return Redirect::back();
+}
+
+
+?>
+==
+<div class="kt-portlet">
+    <div class="kt-portlet__body">
+        <form data-request="onSave" data-request-files data-request-flash id="kt_form" class="kt_form">
+            <div id="kt_repeater_products">
+                <div class="form-group form-group-last row">
+                    <div data-repeater-list="products" class="col-lg-12">
+                        <div data-repeater-item class="align-items-center first-child">
+                            <div class="product">
+                                <div class="row">
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Name'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                                        <input type="text" class="form-control"  name="name" required/>
+
+                                    </div>
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Description'|__}}</label>
+                                        <input type="text" class="form-control"  name="description" required/>
+                                    </div>
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Price'|__}}</label>
+                                        <input class="form-control" type="text"  name="price" >
+                                    </div>
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Image'|__}}</label>
+                                        <input type="file" class="form-control" name="logo" accept="image/*"/>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <a href="javascript:;" data-repeater-delete="" class="btn-sm btn btn-label-danger btn-bold kt-margin-t-25 delete_btn">
+                                        <i class="la la-trash-o"></i>
+                                        {{'Delete'|__}}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% for product in products %}
+                            <div data-repeater-item class="align-items-center">
+                                <input type="hidden" name="id" value="{{product.id}}" />
+                                <div class="product">
+                                   <div class="row">
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Name'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                                        <input type="text" class="form-control" value="{{product.name}}" name="name" required/>
+
+                                    </div>
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Description'|__}}</label>
+                                        <input type="text" class="form-control" value="{{product.description}}" name="description" required/>
+                                    </div>
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Price'|__}}</label>
+                                        <input class="form-control" type="text" value="{{product.price}}" name="price" >
+                                    </div>
+                                    <div class="form-group col-lg-3">
+                                        <label>{{'Logo'|__}}</label>
+                                        <img src="{{product.logo.path}}" width="100px">
+                                        <input class="form-control" type="file" name="logo" >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-md-3">
+                                    <a href="javascript:;" data-repeater-delete="" class="btn-sm btn btn-label-danger btn-bold kt-margin-t-25 delete_btn">
+                                        <i class="la la-trash-o"></i>
+                                        {{'Delete'|__}}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group form-group-last row">
+             <label class="col-xl-12 col-form-label kt-align-right">
+                 <a href="javascript:;" data-repeater-create="" class="btn btn-bold btn-sm btn-label-brand">
+                     <i class="la la-plus"></i> {{'Add Product'|__}}
+                 </a>
+             </label>
+         </div>
+     </div>
+
+         <div class="kt-portlet__foot">
+            <div class="kt-form__actions">
+                <div class="row">
+                    <div class="col-lg-3 col-xl-3">
+                    </div>
+                    <div class="col-lg-9 col-xl-9">
+                        <button type="submit" class="btn btn-primary">{{'Save'|__}}</button>
+                        <span class="kt-margin-left-10">{{'or'|__}} <a href="{{url('dashboard/shops')}}" class="kt-link">{{'Cancel'|__}}</a></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+   </div>
+</div>
+
+{% put styles %}
+<style>
+
+</style>
+{% endput %}
+{% put scripts %}
+
+<script type="text/javascript">
+KTUtil.ready(function () {
+    $( ".kt_form" ).validate({
+        ignore: ":hidden",
+        invalidHandler: function(event, validator) {
+            var alert = $('.kt_form_msg');
+            alert.removeClass('kt--hide').show();
+            KTUtil.scrollTop();
+        }
+    });
+
+    $("#kt_repeater_products").repeater({
+        initEmpty: false,
+        show: function() {
+            var repeater_item = $(this);
+            repeater_item.slideDown();
+        },
+        hide: function(e) {
+            $(this).slideUp(e);
+        }
+    });
+    $('.first-child').remove();
+
+
+});
+</script>
+{% endput %}

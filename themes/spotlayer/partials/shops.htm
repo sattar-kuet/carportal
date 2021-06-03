@@ -1,0 +1,317 @@
+[viewBag]
+==
+<?php
+
+function onStart(){
+        
+    $this['user_id']   =   Auth::getUser()->id;
+    $this['user_role_id']   =   Auth::getUser()->role_id;
+
+    $this['type'] = ($this->param('type') !=null)? $this->param('type'):'all';
+    //dd($this['type']); exit;
+}
+
+?>
+==
+<div class="kt-portlet__head">
+    <div class="kt-portlet__head-label">
+        <h3 class="kt-portlet__head-title">
+           Shops
+        </h3>
+    </div>
+</div>
+<div class="kt-portlet__body">
+    <div class="kt-widget11">
+         <div class="kt-portlet kt-portlet--tabs">
+            <div class="kt-portlet__body">     
+                <div class="kt-datatable"></div>      
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% put scripts %}
+<script type="text/javascript">
+"use strict";
+ var type = '{{type}}';
+var KTAppUserListDatatable = function () {
+    var datatable;
+    var init = function () {
+            var columns = [
+                {
+                    field: "category",
+                    title: "{{'Category'|__}}",
+                    sortable: true,
+                    width: 100,
+                    template: function(row) {
+                        return '<a href="{{url('dashboard/settings/categories')}}/'+row.id+'/edit">'+row.category+'</a>';
+                    }
+                },
+                {
+                    field: "detail",
+                    title: "{{'Detail'|__}}",
+                    sortable: true,
+                    width: 'auto',
+                    template: function(data){
+                        console.log(data);
+                        var output = '<ul>';
+                            output += '<li> Name: '+data.detail.name+'</li>';
+                            output += '<li> Vat: '+data.detail.vat+' '+data.currency+'</li>';
+                            output += '<li> Delivery Charge: '+data.detail.delivery_charge+' '+data.currency+'</li>';
+                            output += '<ul>';
+                        return output;    
+                    }
+                },
+                {
+                    field: "logo",
+                    title: "{{'Logo'|__}}",
+                    sortable: false,
+                    width: 100,
+                    template: function(data, i) {
+                        console.log(data);
+                        return '<img width="40px" src="'+data.logo+'">';
+                    }
+                },
+                {
+                    field: "address",
+                    title: "{{'Address'|__}}",
+                    sortable: false,
+                    width: 'auto'
+                },{
+                    field: "status",
+                    title: "{{'Status'|__}}",
+                    sortable: false,
+                    width: 'auto',
+                    template: function (data) {
+                      var output = '<span class="'+ALERTPRE+ALERTCLASS[data.status]+'">'+STATUS[data.status]+'</span>';
+                      return output;
+                    }
+                },
+ 
+                {
+                    field: "Actions",
+                    width: 100,
+                    title: "{{'Actions'|__}}",
+                    sortable: false,
+                    overflow: 'visible',
+                    template: function (data) {
+                     var  output = '';
+                    {% if  user.role_id == 2 %}
+                         output = '' +
+                        '<div class="btn-group btn-group" role="group" aria-label="...">'+
+                            '<a href="{{url("dashboard/update-shop")}}/'+data.id+'" class="btn btn-brand btn-sm btn-icon" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="{{"Update Shop"|__}}"><i class="la la-pencil"></i></button></a>';
+                        '</div>';
+                        output += 
+                        '<div class="btn-group btn-group" role="group" aria-label="...">'+
+                            '<a href="{{url("dashboard/update-product")}}/'+data.id+'" class="btn btn-brand btn-sm btn-icon" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="{{"Update Product"|__}}"><i class="la la-list"></i></button></a>';
+                        '</div>';
+                        output += 
+                        '<div class="btn-group btn-group" role="group" aria-label="...">'+
+                            '<a href="{{url("dashboard/update-offer")}}/'+data.id+'" class="btn btn-brand btn-sm btn-icon" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="{{"Update offer"|__}}"><i class="la la-gift"></i></button></a>';
+                        '</div>';
+
+                        {% endif %}
+                        {% if user.hasUserPermission('shop', 'u') and user.role_id == 1 %}
+
+	                         if(data.status == 0 || data.status == 2){
+			                   output += '<a href="javascript:;" data-id='+data.id+' class="btn btn-brand btn-sm btn-icon approve-shop" data-skin="dark" title="{{"Approve"|__}}"><i class="fa fa-check"></i></button>'; 
+	                         }
+	                         else if(data.status == 1){
+                               output += '<a href="javascript:;" data-id='+data.id+' class="btn btn-danger btn-sm btn-icon block-shop" data-skin="dark" title="{{"Block"|__}}"><i class="fa fa-times"></i></button>'; 
+	                         }
+	                         
+
+                        {% endif %}
+
+                        return output;
+                    },
+                }
+            ]
+        
+
+        datatable = $('.kt-datatable').KTDatatable({
+            translate: {
+                records: {
+                    processing: '{{"Please wait"|__}}...',
+                    noRecords: '{{"No records found"|__}}'
+                },
+                toolbar: {
+                    pagination: {
+                        items: {
+                            default: {
+                                first: '{{"First"|__}}',
+                                prev: '{{"Previous"|__}}',
+                                next: '{{"Next"|__}}',
+                                last: '{{"Last"|__}}',
+                                more: '{{"More pages"|__}}',
+                                input: '{{"Page number"|__}}',
+                                select: '{{"Select page size"|__}}'
+                            },
+
+                            info: "{{"Displaying"|__}} {{ '{{' }}start{{ '}}' }} - {{ '{{' }}end{{ '}}' }} {{"of"|__}} {{total}} {{"records"|__}}"
+                        }
+                    }
+                }
+            },
+
+            // layout definition
+            layout: {
+                scroll: true, // enable/disable datatable scroll both horizontal and vertical when needed.
+                footer: false, // display/hide footer
+            },
+
+            // column sorting
+            sortable: true,
+
+            pagination: true,
+
+            search: {
+                input: $('#generalSearch'),
+                delay: 400,
+            },
+            data: {
+                type: 'remote',
+                source: {
+                    read: {
+                        url: '{{url("api/shops")}}/'+type,
+                    },
+                },
+                pageSize: 10, // display 20 records per page
+                serverPaging: true,
+                serverFiltering: true,
+                serverSorting: true,
+            },
+            // columns definition
+            columns: columns
+        });
+
+
+        return datatable;
+    };
+
+    // search
+    var search = function () {
+        $('#filter_form select,#filter_form input').each(function(){
+            $(this).on('change', function () {
+                datatable.search($(this).val().toLowerCase(), $(this).attr('name'));
+            });
+        });
+        $('#reset').on('click', function () {
+            datatable.destroy();
+            $('#generalSearch').val('');
+            $('#filter_form select,#filter_form input').each(function(){
+                $(this).val('');
+            });
+            $('#filter_form select').each(function(){
+                $(this).selectpicker("refresh");
+            });
+            init();
+        });
+    };
+
+
+
+    var reload = function () {
+        datatable.reload();
+    };
+
+  
+
+    var destroy = function () {
+        datatable.destroy();
+        $('#generalSearch').val('');
+        $('#filter_form select,#filter_form input').each(function(){
+            $(this).val('');
+        });
+        $('#filter_form select').each(function(){
+            $(this).selectpicker("refresh");
+        });
+    };
+
+    return {
+        // public functions
+        init: function () {
+            init(type);
+        },
+
+        reload: function(){
+            reload();
+        },
+
+        destroy: function(){
+            destroy();
+        },
+
+        filter: function(status){
+            filter(status);
+        }
+    };
+}();
+
+KTUtil.ready(function () {
+    $('.kt_subheader_filter_form').on('submit', function (e) {
+        e.preventDefault();
+        if($(this).find("button").hasClass('active')){
+            $('.kt_subheader_filter_form button').removeClass('active');
+            $("#filter_selected").html('');
+            KTAppUserListDatatable.filter(0);
+        }else{
+            $('.kt_subheader_filter_form button').removeClass('active');
+            $("#filter_selected").html(':&nbsp;'+$(this).find("button").text());
+            $(this).find("button").addClass('active');
+            var status = $(this).find("input.filter").val();
+            KTAppUserListDatatable.filter(status);
+        }
+    });
+  KTAppUserListDatatable.init();
+
+  $('body').on('click','.approve-shop', function(e){
+        e.preventDefault();
+        var orderId = $(this).data('id');
+        
+        KTApp.blockPage({
+            overlayColor: '#000000',
+            type: 'v2',
+            state: 'success',
+            message: '{{"Please wait"|__}}...'
+        });
+        $.request('onShopApprove', {
+            data: {id: orderId},
+            success: function(data) {
+                console.log(data);
+                
+                KTApp.unblockPage();
+                window.location.reload();
+                
+            }
+        });
+});
+
+$('body').on('click','.block-shop', function(e){
+        e.preventDefault();
+        var orderId = $(this).data('id');
+        
+        KTApp.blockPage({
+            overlayColor: '#000000',
+            type: 'v2',
+            state: 'success',
+            message: '{{"Please wait"|__}}...'
+        });
+        $.request('onShopBlock', {
+            data: {id: orderId},
+            success: function(data) {
+                console.log(data);
+                
+                KTApp.unblockPage();
+                window.location.reload();
+                
+            }
+        });
+});
+
+
+
+});
+</script>
+{% endput %}

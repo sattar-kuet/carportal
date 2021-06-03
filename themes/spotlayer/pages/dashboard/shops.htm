@@ -1,0 +1,41 @@
+title = "Shipments"
+url = "/dashboard/shops/:type?"
+layout = "admin"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "dashboard/dashboard"
+menu_breadcrumb = "order"
+hide_crumb = 0
+remove_crumb_trail = 0
+crumb_disabled = 0
+
+[viewBag]
+localeTitle[ar] = "إدارة الطلبات"
+==
+<?php
+use ItScholarBd\Api\Classes\Action;
+function onStart(){
+    if(!Auth::getUser()->hasUserPermission(["shop"],'r')) {
+        \Flash::error($this['theme_lang']['not_allowed']);
+    }
+
+    if(Auth::getUser()->hasUserPermission(["shop"],'c') &&  Auth::getUser()->role_id ==2){
+        $this->page->actions = array(
+            'buttons'   =>  array(
+                array(
+                    'id'    =>  'addNew',
+                    'title' =>  $this['theme_lang']['add_new'],
+                    'icon'  =>  'flaticon2-add',
+                    'type'  =>  'success',
+                    'url'   =>  url('dashboard/create-shop'),
+                ),
+            ),
+        );
+    } 
+}
+?>
+==
+{% partial 'shops' %}

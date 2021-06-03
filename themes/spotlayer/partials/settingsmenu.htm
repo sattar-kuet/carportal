@@ -1,0 +1,136 @@
+[viewBag]
+==
+
+<div class="kt-grid__item kt-app__toggle kt-app__aside kt-padding-r-20" id="kt_user_profile_aside">
+	<!--begin:: Widgets/Applications/User/Profile1-->
+	<div class="kt-portlet kt-portlet--height-fluid-">
+		<div class="kt-inbox__nav">
+			<ul class="kt-nav kt-nav--active-bg" id="kt_nav" role="tablist">
+				<li class="kt-nav__item {% if this.param.page == 'general' or (this.param.page is empty and this.page.child_of_page is empty) %}kt-nav__item--active{% endif %}">
+					<a  href="{{url('dashboard/settings/general')}}" class="kt-nav__link">
+						<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon kt-nav__link-icon">
+						    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+						        <rect id="bound" x="0" y="0" width="24" height="24"/>
+						        <path d="M5,8.6862915 L5,5 L8.6862915,5 L11.5857864,2.10050506 L14.4852814,5 L19,5 L19,9.51471863 L21.4852814,12 L19,14.4852814 L19,19 L14.4852814,19 L11.5857864,21.8994949 L8.6862915,19 L5,19 L5,15.3137085 L1.6862915,12 L5,8.6862915 Z M12,15 C13.6568542,15 15,13.6568542 15,12 C15,10.3431458 13.6568542,9 12,9 C10.3431458,9 9,10.3431458 9,12 C9,13.6568542 10.3431458,15 12,15 Z" id="Combined-Shape" fill="#000000"/>
+						    </g>
+						</svg>
+						<span class="kt-nav__link-text">{{'System Configuration'|__}}</span>
+					</a>
+				</li>
+				<li class="kt-nav__item {% if this.param.page == 'company' %}kt-nav__item--active{% endif %}">
+					<a  href="{{url('dashboard/settings/company')}}" class="kt-nav__link">
+						<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon kt-nav__link-icon">
+						    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+						        <rect id="bound" x="0" y="0" width="24" height="24"/>
+						        <path d="M7.70696074,11.6465196 L4.15660341,9.75299572 C3.96167938,9.64903623 3.88793804,9.40674327 3.99189753,9.21181925 C4.08361072,9.03985702 4.28590727,8.95902234 4.47087102,9.0204286 L9.57205231,10.7139738 L7.70696074,11.6465196 Z M12.7322989,14.3267 L16.3686753,12.9703901 L18.6316817,13.7216874 L18.6299527,13.7225513 C20.0084876,14.1925077 21,15.4985341 21,17.0361406 C21,18.9691372 19.4329966,20.5361406 17.5,20.5361406 C15.5670034,20.5361406 14,18.9691372 14,17.0361406 C14,16.3880326 14.176158,15.7810686 14.4832056,15.2605169 L12.7322989,14.3267 Z M17.5,15.5361406 C16.6715729,15.5361406 16,16.2077134 16,17.0361406 C16,17.8645677 16.6715729,18.5361406 17.5,18.5361406 C18.3284271,18.5361406 19,17.8645677 19,17.0361406 C19,16.2077134 18.3284271,15.5361406 17.5,15.5361406 Z" id="Combined-Shape" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
+						        <path d="M17.5,9 C18.3284271,9 19,8.32842712 19,7.5 C19,6.67157288 18.3284271,6 17.5,6 C16.6715729,6 16,6.67157288 16,7.5 C16,8.32842712 16.6715729,9 17.5,9 Z M14.4832056,9.27562366 C14.176158,8.75507197 14,8.14810794 14,7.5 C14,5.56700338 15.5670034,4 17.5,4 C19.4329966,4 21,5.56700338 21,7.5 C21,9.03760648 20.0084876,10.3436328 18.6299527,10.8135893 L18.6316817,10.8144531 L4.47087102,15.515712 C4.28590727,15.5771182 4.08361072,15.4962835 3.99189753,15.3243213 C3.88793804,15.1293973 3.96167938,14.8871043 4.15660341,14.7831448 L14.4832056,9.27562366 Z" id="Combined-Shape" fill="#000000" fill-rule="nonzero"/>
+						    </g>
+						</svg>
+						<span class="kt-nav__link-text">{{'Setup Company'|__}}</span>
+					</a>
+				</li>
+
+				<li class="kt-nav__item {% if this.page.settings_breadcrumb == 'definitions' %}kt-nav__item--active{% endif %}">
+					<a class="kt-nav__link {% if this.page.settings_breadcrumb != 'definitions' %}collapsed{% endif %}" role="tab" id="kt_nav_link_1" data-toggle="collapse" href="#kt_nav_sub_1" aria-expanded=" true">
+						<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon kt-nav__link-icon">
+						    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+						        <rect id="bound" x="0" y="0" width="24" height="24"/>
+						        <path d="M10.5,5 L19.5,5 C20.3284271,5 21,5.67157288 21,6.5 C21,7.32842712 20.3284271,8 19.5,8 L10.5,8 C9.67157288,8 9,7.32842712 9,6.5 C9,5.67157288 9.67157288,5 10.5,5 Z M10.5,10 L19.5,10 C20.3284271,10 21,10.6715729 21,11.5 C21,12.3284271 20.3284271,13 19.5,13 L10.5,13 C9.67157288,13 9,12.3284271 9,11.5 C9,10.6715729 9.67157288,10 10.5,10 Z M10.5,15 L19.5,15 C20.3284271,15 21,15.6715729 21,16.5 C21,17.3284271 20.3284271,18 19.5,18 L10.5,18 C9.67157288,18 9,17.3284271 9,16.5 C9,15.6715729 9.67157288,15 10.5,15 Z" id="Combined-Shape" fill="#000000"/>
+						        <path d="M5.5,8 C4.67157288,8 4,7.32842712 4,6.5 C4,5.67157288 4.67157288,5 5.5,5 C6.32842712,5 7,5.67157288 7,6.5 C7,7.32842712 6.32842712,8 5.5,8 Z M5.5,13 C4.67157288,13 4,12.3284271 4,11.5 C4,10.6715729 4.67157288,10 5.5,10 C6.32842712,10 7,10.6715729 7,11.5 C7,12.3284271 6.32842712,13 5.5,13 Z M5.5,18 C4.67157288,18 4,17.3284271 4,16.5 C4,15.6715729 4.67157288,15 5.5,15 C6.32842712,15 7,15.6715729 7,16.5 C7,17.3284271 6.32842712,18 5.5,18 Z" id="Combined-Shape" fill="#000000" opacity="0.3"/>
+						    </g>
+						</svg>
+						<span class="kt-nav__link-text">{{'Definitions'|__}}</span>
+						<span class="kt-nav__link-arrow"></span>
+					</a>
+					<ul class="kt-nav__sub collapse {% if this.page.settings_breadcrumb == 'definitions' %}show{% endif %}" id="kt_nav_sub_1" role="tabpanel" aria-labelledby="m_nav_link_1" data-parent="#kt_nav">
+
+						<li class="kt-nav__item {% if this.param.page == 'categories' or this.page.child_of_page == 'categories' %}kt-nav__item--active{% endif %}" aria-haspopup="true" >
+							<a  href="{{url('dashboard/settings/categories')}}" class="kt-nav__link ">
+								<span class="kt-nav__link-bullet kt-nav__link-bullet--line"><span></span></span>
+								<span class="kt-nav__link-text">{{'Shop Categories'|__}}</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+			
+			
+				<li class="kt-nav__item {% if this.page.settings_breadcrumb == 'components' %}kt-nav__item--active{% endif %}">
+					<a class="kt-nav__link {% if this.page.settings_breadcrumb != 'components' %}collapsed{% endif %}" role="tab" id="kt_nav_link_3" data-toggle="collapse" href="#kt_nav_sub_3" aria-expanded=" true">
+						<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon kt-nav__link-icon">
+						    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+						        <rect id="bound" x="0" y="0" width="24" height="24"/>
+						        <path d="M13.5,21 L13.5,18 C13.5,17.4477153 13.0522847,17 12.5,17 L11.5,17 C10.9477153,17 10.5,17.4477153 10.5,18 L10.5,21 L5,21 L5,4 C5,2.8954305 5.8954305,2 7,2 L17,2 C18.1045695,2 19,2.8954305 19,4 L19,21 L13.5,21 Z M9,4 C8.44771525,4 8,4.44771525 8,5 L8,6 C8,6.55228475 8.44771525,7 9,7 L10,7 C10.5522847,7 11,6.55228475 11,6 L11,5 C11,4.44771525 10.5522847,4 10,4 L9,4 Z M14,4 C13.4477153,4 13,4.44771525 13,5 L13,6 C13,6.55228475 13.4477153,7 14,7 L15,7 C15.5522847,7 16,6.55228475 16,6 L16,5 C16,4.44771525 15.5522847,4 15,4 L14,4 Z M9,8 C8.44771525,8 8,8.44771525 8,9 L8,10 C8,10.5522847 8.44771525,11 9,11 L10,11 C10.5522847,11 11,10.5522847 11,10 L11,9 C11,8.44771525 10.5522847,8 10,8 L9,8 Z M9,12 C8.44771525,12 8,12.4477153 8,13 L8,14 C8,14.5522847 8.44771525,15 9,15 L10,15 C10.5522847,15 11,14.5522847 11,14 L11,13 C11,12.4477153 10.5522847,12 10,12 L9,12 Z M14,12 C13.4477153,12 13,12.4477153 13,13 L13,14 C13,14.5522847 13.4477153,15 14,15 L15,15 C15.5522847,15 16,14.5522847 16,14 L16,13 C16,12.4477153 15.5522847,12 15,12 L14,12 Z" id="Combined-Shape" fill="#000000"/>
+						        <rect id="Rectangle-Copy-2" fill="#FFFFFF" x="13" y="8" width="3" height="3" rx="1"/>
+						        <path d="M4,21 L20,21 C20.5522847,21 21,21.4477153 21,22 L21,22.4 C21,22.7313708 20.7313708,23 20.4,23 L3.6,23 C3.26862915,23 3,22.7313708 3,22.4 L3,22 C3,21.4477153 3.44771525,21 4,21 Z" id="Rectangle-2" fill="#000000" opacity="0.3"/>
+						    </g>
+						</svg>
+						<span class="kt-nav__link-text">{{'Components'|__}}</span>
+						<span class="kt-nav__link-arrow"></span>
+					</a>
+					<ul class="kt-nav__sub collapse {% if this.page.settings_breadcrumb == 'components' %}show{% endif %}" id="kt_nav_sub_3" role="tabpanel" aria-labelledby="m_nav_link_3" data-parent="#kt_nav">
+
+						<li class="kt-nav__item {% if this.page.child_of_page == 'google' or  this.param.page == 'google' %}kt-nav__item--active{% endif %}" aria-haspopup="true" >
+							<a  href="{{url('dashboard/settings/google')}}" class="kt-nav__link ">
+								<span class="kt-nav__link-bullet kt-nav__link-bullet--line"><span></span></span>
+								<span class="kt-nav__link-text">{{'Google APIs'|__}}</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+				<li class="kt-nav__item {% if this.page.settings_breadcrumb == 'languages' %}kt-nav__item--active{% endif %}">
+					<a class="kt-nav__link {% if this.page.settings_breadcrumb != 'languages' %}collapsed{% endif %}" role="tab" id="kt_nav_link_5" data-toggle="collapse" href="#kt_nav_sub_5" aria-expanded=" true">
+						<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon kt-nav__link-icon">
+						    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+						        <rect id="bound" x="0" y="0" width="24" height="24"/>
+						        <path d="M13,18.9450712 L13,20 L14,20 C15.1045695,20 16,20.8954305 16,22 L8,22 C8,20.8954305 8.8954305,20 10,20 L11,20 L11,18.9448245 C9.02872877,18.7261967 7.20827378,17.866394 5.79372555,16.5182701 L4.73856106,17.6741866 C4.36621808,18.0820826 3.73370941,18.110904 3.32581341,17.7385611 C2.9179174,17.3662181 2.88909597,16.7337094 3.26143894,16.3258134 L5.04940685,14.367122 C5.46150313,13.9156769 6.17860937,13.9363085 6.56406875,14.4106998 C7.88623094,16.037907 9.86320756,17 12,17 C15.8659932,17 19,13.8659932 19,10 C19,7.73468744 17.9175842,5.65198725 16.1214335,4.34123851 C15.6753081,4.01567657 15.5775721,3.39010038 15.903134,2.94397499 C16.228696,2.49784959 16.8542722,2.4001136 17.3003976,2.72567554 C19.6071362,4.40902808 21,7.08906798 21,10 C21,14.6325537 17.4999505,18.4476269 13,18.9450712 Z" id="Combined-Shape" fill="#000000" fill-rule="nonzero"/>
+						        <circle id="Oval" fill="#000000" opacity="0.3" cx="12" cy="10" r="6"/>
+						    </g>
+						</svg>
+						<span class="kt-nav__link-text">{{'Localizations'|__}}</span>
+						<span class="kt-nav__link-arrow"></span>
+					</a>
+					<ul class="kt-nav__sub collapse {% if this.page.settings_breadcrumb == 'languages' %}show{% endif %}" id="kt_nav_sub_5" role="tabpanel" aria-labelledby="m_nav_link_5" data-parent="#kt_nav">
+					<!-- 	<li class="kt-nav__item {% if this.page.child_of_page == 'languages' or  this.param.page == 'languages' %}kt-nav__item--active{% endif %}" aria-haspopup="true">
+							<a  href="{{url('dashboard/settings/languages')}}" class="kt-nav__link ">
+								<span class="kt-nav__link-bullet kt-nav__link-bullet--line"><span></span></span>
+								<span class="kt-nav__link-text">{{'Languages'|__}}</span>
+							</a>
+						</li>
+						<li class="kt-nav__item {% if this.page.child_of_page == 'translate' or  this.param.page == 'translate' %}kt-nav__item--active{% endif %}" aria-haspopup="true">
+							<a  href="{{url('dashboard/settings/translate')}}" class="kt-nav__link ">
+								<span class="kt-nav__link-bullet kt-nav__link-bullet--line"><span></span></span>
+								<span class="kt-nav__link-text">{{'Translate'|__}}</span>
+							</a>
+						</li> -->
+						<li class="kt-nav__item {% if this.page.child_of_page == 'currencies' or  this.param.page == 'currencies' %}kt-nav__item--active{% endif %}" aria-haspopup="true" >
+							<a  href="{{url('dashboard/settings/currencies')}}" class="kt-nav__link ">
+								<span class="kt-nav__link-bullet kt-nav__link-bullet--line"><span></span></span>
+								<span class="kt-nav__link-text">{{'Currencies'|__}}</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+				<li class="kt-nav__item {% if this.page.child_of_page == 'backup' or  this.param.page == 'backup' %}kt-nav__item--active{% endif %}">
+					<a  href="{{url('dashboard/settings/backup')}}" class="kt-nav__link">
+						<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon kt-nav__link-icon">
+						    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+						        <polygon id="Shape" points="0 0 24 0 24 24 0 24"/>
+						        <path d="M17,4 L6,4 C4.79111111,4 4,4.7 4,6 L4,18 C4,19.3 4.79111111,20 6,20 L18,20 C19.2,20 20,19.3 20,18 L20,7.20710678 C20,7.07449854 19.9473216,6.94732158 19.8535534,6.85355339 L17,4 Z M17,11 L7,11 L7,4 L17,4 L17,11 Z" id="Shape" fill="#000000" fill-rule="nonzero"/>
+						        <rect id="Rectangle-16" fill="#000000" opacity="0.3" x="12" y="4" width="3" height="5" rx="0.5"/>
+						    </g>
+						</svg>
+						<span class="kt-nav__link-text">{{'Data Backup'|__}}</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+{% put styles %}
+	{% if currentLang == 'ar'%}
+	    <link href="./admin/css/demo1/pages/inbox/inbox.rtl.css" rel="stylesheet" type="text/css" />
+	{% else %}
+		<link href="./admin/css/demo1/pages/inbox/inbox.css" rel="stylesheet" type="text/css" />
+	{% endif %}
+{% endput %}

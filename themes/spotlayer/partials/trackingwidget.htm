@@ -1,0 +1,73 @@
+[viewBag]
+==
+<?php
+    function onStart(){
+        $data = post();
+        $this['search'] = false;
+        if(isset($data['number'])){
+            $this['search'] = true;
+        	$order			= new Spot\Shipment\Models\Order;
+            $settings       = \Spot\Shipment\Models\Settings::instance();
+            $length         = strlen($this['settings']['tracking']['prefix_order']);
+            $prefix         = substr($data['number'], 0, $length);
+            if (strcasecmp($prefix, $this['settings']['tracking']['prefix_order']) == 0) {
+                $data['number'] =   str_ireplace($this['settings']['tracking']['prefix_order'],'',$data['number']);
+            }
+        	$this['order']	=	$order->where('number', $data['number'])->first();
+        }
+    }
+?>
+==
+{{test}}
+{% if search is empty %}
+<div class="kt-infobox__header kt-margin-b-0">
+    <h4 class="kt-infobox__title">{{"Type your full tracking number to get the tracking data"|__}}.</h4>
+</div>
+{% endif %}
+{% if order %}
+    <div class="kt-infobox__body">
+        <div class="row">
+            <div class="col-xl-3"></div>
+            <div class="col-xl-6">
+                <div class="kt-timeline-v1 kt-timeline-v1--justified">
+                    <div class="kt-timeline-v1__items">
+                        <div class="kt-timeline-v1__marker"></div>
+
+	                    {% for activity in order.activities %}
+                            <div class="kt-timeline-v1__item {% if loop.index == 1 %}kt-timeline-v1__item--first {% endif %}">
+                                <div class="kt-timeline-v1__item-circle">
+                                    <div class="kt-bg-danger"></div>
+                                </div>
+
+                                <span class="kt-timeline-v1__item-time kt-font-brand">
+                                    {{activity.created_at|date(settings.dateformat)}} {{activity.created_at|date('h:i')}} <span>{{activity.created_at|date('a')|__}}</span>
+                                </span>
+
+                                <div class="kt-timeline-v1__item-content">
+                                    <div class="kt-timeline-v1__item-title">
+                                        <strong class="kt-font-boldest">{{'User'|__}}:</strong> {{activity.user.name}}
+                                    </div>
+                                    <div class="kt-timeline-v1__item-body">
+                                        <p>
+											{% if activity.other %}
+	                                            {% set text = 'activity_'~activity.description %}
+	                                            {{text|__}}: {{activity.other}}
+	                                        {% else %}
+	                                            {% set text = 'activity_'~activity.description %}
+	            								{{text|__}}
+	                                        {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% elseif search %}
+<div class="kt-infobox__header kt-margin-b-0">
+    <h4 class="kt-infobox__title">{{"Please check the tracking number again and type the full number with its prefix correctly and try again"|__}}.</h4>
+</div>
+{% endif %}

@@ -1,0 +1,149 @@
+title = "Update Product"
+url = "/dashboard/update-offer/:shop_id"
+layout = "admin"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "dashboard/shops"
+menu_breadcrumb = "shop"
+hide_crumb = 0
+remove_crumb_trail = 0
+crumb_disabled = 0
+multiselect = 0
+[viewBag]
+==
+<?php
+use System\Models\File;
+use ItScholarBd\Api\Models\Offer;
+
+function onStart() {
+
+    if(!Auth::getUser()->hasUserPermission(["shop"],'c')) {
+
+        \Flash::error($this['theme_lang']['not_allowed']);
+        return Redirect::to('dashboard/settings');
+    }
+    $this['offer'] = Offer::with('image')->where('shop_id',$this->param('shop_id'))->first();
+    //dd( $this['offer']); exit;
+}
+
+function onSave()
+{
+    if(!Auth::getUser()->hasUserPermission(["shop"],'c')) {
+        throw new ApplicationException($this['theme_lang']['not_allowed']);
+    }
+    $ids = [];
+    $data = post();
+    $data['validity'] = date("Y-m-d 23:59:59", strtotime($data['validity']));
+    extract($data);
+    $files = Input::file(); 
+   
+
+    $fields = ['title','code','discount','type','validity','minimum_spent'];
+
+    $offer = empty($id)? new Offer : Offer::find($id);
+    
+    foreach ($fields as $field) {
+
+        $offer->$field = $$field;
+    }
+    if(isset($files['image'])){
+        $offer->image = $files['image'];
+    }
+    
+    $offer->shop_id = $this->param('shop_id');
+
+    empty($id)? $offer->save() : $offer->update();
+
+    \Flash::success($this['theme_lang']['created_successfully']);
+    return Redirect::back();
+}
+
+
+?>
+==
+<div class="kt-portlet">
+    <div class="kt-portlet__body">
+        <form data-request="onSave" data-request-files data-request-flash id="kt_form" class="kt_form">
+
+          <div class="row">
+            <input type="hidden" name="id" value="{{offer.id}}">
+            <div class="form-group col-lg-3">
+                <label>{{'Title'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                <input type="text" class="form-control"  name="title" value="{{offer.title}}" required/>
+
+            </div>
+            <div class="form-group col-lg-3">
+                <label>{{'Code'|__}}</label>
+                <input type="text" class="form-control"  name="code" value="{{offer.code}}" required/>
+            </div>
+            <div class="form-group col-lg-3">
+             <label>{{'Discount'|__}}</label>
+             <div class="input-group">
+                <input  type="number" class="form-control"  name="discount" value="{{offer.discount}}" required/>
+                <div class="input-group-append"> 
+                    <span class="input-group-text padding-zero">
+                     <select class="form-control discount_type" name="type" title="Type">
+                        <option data-hidden="true"></option>
+                        <option value="0" {% if offer.type == 0 %} selected {% endif %}>Percentage</option>
+                        <option value="1" {% if offer.type == 1 %} selected {% endif %}>Absolute</option>
+                    </select>
+                    </span>
+                </div>
+              </div>
+           </div>
+            <div class="form-group col-lg-3">
+                <label>{{'Validity'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                <input type="text" id="datetimepicker" class="form-control" name="validity" value="{{offer.validity|date(settings.dateformat)}}" >
+
+            </div>
+            <div class="form-group col-lg-3">
+                <label>{{'Minimum Spent'|__}}</label>
+                <input class="form-control" type="text"  name="minimum_spent" value="{{offer.minimum_spent}}">
+            </div>
+            <div class="form-group col-lg-3">
+                <label>{{'Image'|__}}</label>
+                <img src="{{offer.image.path}}" width="120px">
+                <input type="file" class="form-control" name="image" accept="image/*"/>
+            </div>
+</div>
+
+<div class="kt-portlet__foot">
+    <div class="kt-form__actions">
+        <div class="row">
+            <div class="col-lg-3 col-xl-3">
+            </div>
+            <div class="col-lg-9 col-xl-9">
+                <button type="submit" class="btn btn-primary">{{'Save'|__}}</button>
+                <span class="kt-margin-left-10">{{'or'|__}} <a href="{{url('dashboard/shops')}}" class="kt-link">{{'Cancel'|__}}</a></span>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+
+</div>
+</div>
+
+{% put styles %}
+<style>
+
+</style>
+{% endput %}
+{% put scripts %}
+
+<script type="text/javascript">
+    KTUtil.ready(function () {
+        $( ".kt_form" ).validate({
+            ignore: ":hidden",
+            invalidHandler: function(event, validator) {
+                var alert = $('.kt_form_msg');
+                alert.removeClass('kt--hide').show();
+                KTUtil.scrollTop();
+            }
+        });
+    });
+</script>
+{% endput %}

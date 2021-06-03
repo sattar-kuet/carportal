@@ -1,0 +1,174 @@
+title = "Dashboard"
+daterange = 1
+url = "/dashboard"
+layout = "admin"
+description = "Overview on your system"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "mey_no_parent"
+hide_crumb = 1
+remove_crumb_trail = 0
+crumb_disabled = 0
+
+[viewBag]
+==
+<?php
+use ItScholarBd\Api\Classes\Utility;
+
+function onStart(){
+
+    $this['category']      =   ItScholarBd\api\Models\Category::count();
+    $this['shop']          =   ItScholarBd\api\Models\Shop::where('status',0)->count();
+    $this['approved_shop']          =   ItScholarBd\api\Models\Shop::where('status',1)->count();
+    $this['client']        =   ItScholarBd\api\Models\User::client()->count();
+    if( Auth::getUser()->role_id == 1){
+
+     $this['totalOrder']      =   ItScholarBd\api\Models\Order::count();
+     $this['pendingOrder']    =   ItScholarBd\api\Models\Order::where(['status'=>0])->count();
+     $this['processingOrder'] =   ItScholarBd\api\Models\Order::where(['status'=>1])->count();
+     $this['onthewayOrder']   =   ItScholarBd\api\Models\Order::where(['status'=>2])->count();
+     $this['completedOrder']  =   ItScholarBd\api\Models\Order::where(['status'=>3])->count();
+
+    }else if(Auth::getUser()->role_id == 2){
+     $user_id = Auth::getUser()->id;
+     $this['totalOrder']      =   ItScholarBd\api\Models\Order::where(['shop_owner_id'=>$user_id])->count();
+     $this['pendingOrder']    =   ItScholarBd\api\Models\Order::where(['status'=>0,'shop_owner_id'=>$user_id])->count();
+     $this['processingOrder'] =   ItScholarBd\api\Models\Order::where(['status'=>1,'shop_owner_id'=>$user_id])->count();
+     $this['onthewayOrder']   =   ItScholarBd\api\Models\Order::where(['status'=>2,'shop_owner_id'=>$user_id])->count();
+     $this['completedOrder']  =   ItScholarBd\api\Models\Order::where(['status'=>3,'shop_owner_id'=>$user_id])->count();
+         
+    }
+}
+
+?>
+==
+
+<!--Begin::Section-->
+<div class="row">
+    <div class="col-xl-12">
+        <!--begin:: Widgets/Applications/User/Profile3-->
+        <div class="kt-portlet kt-portlet--height-fluid">
+            <div class="kt-portlet__body">
+                <div class="kt-widget kt-widget--user-profile-3">
+
+                    <div class="kt-widget__bottom">
+                        {% if user.role_id == 1 %}
+                        <a href="{{url('dashboard/settings/categories')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-list"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{category}} {{'Shop Category'|__}}</span>
+                                <span class="kt-widget__value">{{'Shop Category'|__}}</span>
+                            </div>
+                        </a>
+                        <a href="{{url('dashboard/clients')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-users"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{client}} {{'Clients'|__}}</span>
+                                <span class="kt-widget__value">{{'Total Client'|__}}</span>
+                            </div>
+                        </a>
+
+                        <a href="{{url('dashboard/shops/approved')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-refresh"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{approved_shop}} {{'Total Shop'|__}}</span>
+                                <span class="kt-widget__value">{{'Approved Shops'|__}}</span>
+                            </div>
+                        </a>
+                        <a href="{{url('dashboard/shops/pending')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-refresh"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{shop}} {{'New Shop'|__}}</span>
+                                <span class="kt-widget__value">{{'Awating for Approval'|__}}</span>
+                            </div>
+                        </a>
+                        {% endif %}
+
+                        {% if user.role_id == 2 %}
+                         <a href="{{url('dashboard/orders/pending')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-plus"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{pendingOrder}} {{'New Order'|__}}</span>
+                                <span class="kt-widget__value">{{'Take Action'|__}}</span>
+                            </div>
+                        </a>
+                         <a href="{{url('dashboard/orders/processing')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-refresh"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{processingOrder}} {{'Processing Order'|__}}</span>
+                                <span class="kt-widget__value">{{'Deliver ASAP'|__}}</span>
+                            </div>
+                        </a>
+                         <a href="{{url('dashboard/orders/ontheway')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-truck"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{onthewayOrder}} {{'On the way'|__}}</span>
+                                <span class="kt-widget__value">{{'About to complete'|__}}</span>
+                            </div>
+                        </a>
+                        <a href="{{url('dashboard/orders/Completed')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-list"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{completedOrder}} {{'Completed Order'|__}}</span>
+                                <span class="kt-widget__value">{{'No action needed'|__}}</span>
+                            </div>
+                        </a>
+                        {% endif %}
+
+                        <a href="{{url('dashboard/orders/all')}}" class="kt-widget__item">
+                            <div class="kt-widget__icon">
+                                <i class="flaticon-bag"></i>
+                            </div>
+                            <div class="kt-widget__details">
+                                <span class="kt-widget__title">{{totalOrder}} {{'Order'|__}}</span>
+                                <span class="kt-widget__value">{{'Total Order'|__}}</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--end:: Widgets/Applications/User/Profile3-->
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="kt-portlet kt-portlet--height-fluid" id="listing_container">
+           {% if(user.role_id == 1 ) %}
+              {% partial 'shops' %}
+           {% endif %}  
+
+           {% if(user.role_id == 2 ) %}
+              {% partial 'orders'  %}
+           {% endif %} 
+        
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+    div#kt_dashboard_daterangepicker {
+    display: none;
+    }
+</style>

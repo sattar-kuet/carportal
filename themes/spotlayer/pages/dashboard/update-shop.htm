@@ -1,0 +1,236 @@
+title = "Create New Shop"
+url = "/dashboard/update-shop/:id"
+layout = "admin"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "dashboard/shipments"
+menu_breadcrumb = "order"
+hide_crumb = 0
+remove_crumb_trail = 0
+crumb_disabled = 0
+
+[viewBag]
+==
+<?php
+use System\Models\File;
+use ItScholarBd\Api\Models\Shop;
+use ItScholarBd\Api\Models\Category;
+function onStart() {
+    if(!Auth::getUser()->hasUserPermission(["shop"],'u')) {
+        \Flash::error($this['theme_lang']['not_allowed']);
+        return Redirect::to('dashboard/settings');
+    }
+    $this['shopCategories']  =   Category::select('id','name')->get();
+    $this['item']    =   Shop::with('category')->find($this->param('id'));
+    $this->page->stretch     = true;
+}
+
+function onSave()
+{
+    if(!Auth::getUser()->hasUserPermission(["shop"],'u')) {
+        throw new ApplicationException($this['theme_lang']['not_allowed']);
+    }
+    $data = post();
+    $shop = Shop::find($this->param('id'));
+
+    foreach($data as $key=>$value){
+        if($key!='logo'){
+            $shop->$key = $value;
+        }
+    }
+    $shop->logo = Input::file('logo');
+    
+    $shop->update();
+    
+    \Flash::success($this['theme_lang']['created_successfully']);
+    return Redirect::to('dashboard/shops');
+}
+
+function onImageUpload(){
+    $image = Input::all();
+    $file = (new File())->fromPost($image['logo']);
+    return [
+             '#uploadedLogo'=> '<img src="'. $file->getThumb(200,200,['mode'=>'crop']).'" >'
+           ];
+}
+
+?>
+==
+
+
+<form data-request="onSave" data-request-files data-request-flash id="kt_form" class="kt_form">
+       
+<div class="row">
+    <div class="col-lg-12">
+        <div class="kt-portlet kt-portlet--mobile">
+            <div class="kt-portlet__head">
+                <div class="kt-portlet__head-label">
+                    <h3 class="kt-portlet__head-title">
+                        {{'Shop information'|__}}
+                    </h3>
+                </div>
+            </div>
+            <div class="kt-portlet__body">
+                <div class="form-group form-group-last kt-hide">
+                    <div class="alert alert-danger kt_form_msg" role="alert">
+                        <div class="alert-icon"><i class="flaticon-warning"></i></div>
+                        <div class="alert-text">
+                            {{'Oh snap! Change a few things up and try submitting again'|__}}.
+                        </div>
+                        <div class="alert-close">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true"><i class="la la-close"></i></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="row">
+                    <div class="form-group col-lg-4">
+                        <label>{{'Shop Type'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <select class="form-control" name="shop_category_id" id="shop_category_id" data-live-search="true" required>
+                            <option data-hidden="true"></option>
+                            {% for shopCategory in shopCategories %}
+                                <option {% if item.shop_category_id == shopCategory.id %}selected{% endif %} value="{{shopCategory.id}}">{{shopCategory.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-lg-4">
+                        <label>{{'Name'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <input type="text" class="form-control" name="name" value="{{item.name}}">
+                    </div>
+                    <div class="form-group col-lg-4">
+                        <label>{{'Logo'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                       <input type="file" class="form-control" name="logo" accept="image/*"  data-request="onImageUpload" data-request-files data-request-flash />
+                            <div id="uploadedLogo"><img height="120px" src="{{item.logo.path}}" /></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-lg-6">
+                        <label>{{'Vat'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <div class="input-group">
+                            <input class="form-control decimal "  name="vat" value="{{item.vat}}" required>
+                            <div class="input-group-append"><span class="input-group-text">%</span></div>
+                        </div> 
+                    </div>
+                    
+                    <div class="form-group col-lg-6">
+                        <label>{{'Delivery Charge'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <div class="input-group">
+                                {% if primary_currency.place_symbol_before == 1 %}
+                                <div class="input-group-prepend"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                                <input class="form-control decimal " type="text" name="delivery_charge" value="{{item.delivery_charge}}" required>
+                                {% if primary_currency.place_symbol_before == 0 %}
+                                <div class="input-group-append"><span class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                        </div> 
+                    </div>
+                </div>
+                <div class="row">
+                     <div class="form-group col-lg-12">
+                        <label>{{'Address'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <input type="text" class="form-control" name="address" value="{{item.address}}" id="address">
+                    </div>
+                        <input type="hidden" class="form-control" name="lat" value="{{item.lat}}"/>
+                        <input type="hidden" class="form-control" name="lng" value="{{item.lng}}"/>
+                </div>
+                <div class="form-group row">
+                    <label class="col-xl-3 col-lg-3 col-form-label">{{'Google Map'|__}}</label>
+                    <div class="col-lg-9 col-xl-6">
+                        <div id="map_canvas" class="col-sm-12"></div>
+                        <span class="form-text text-muted">{{'Change the pin to select the right location'|__}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="kt-portlet">
+            <div class="kt-portlet__foot">
+                <div class="row">
+                    <div class="col-lg-12">
+                        
+                        <button type="submit" class="btn btn-success save">{{'Save'|__}}</button>
+                        <span class="kt-margin-left-10">{{'or'|__}} <a href="{{this.page.child_of|page}}" class="kt-link">{{'Cancel'|__}}</a></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ form_close() }}
+
+{% put styles %}
+    <style>
+        .table-bordered tr td:first-child {
+            width: 200px;
+            font-weight: bold;
+        }
+        .map_canvas {
+          height: 350px;
+        }
+        .filter-option-inner br {
+            display: none;
+        }
+        .select2 {
+            width: 100% !important;
+        }
+		.select2-selection {
+			min-height: 36px !important;
+		}
+        #addnewsender,#addnewsenderaddress,#addnewreceiver,#addnewreceiveraddress{
+            box-shadow: 0px 0px 2px 1px rgba(0,0,0,0.3);
+        }
+        .kt-portlet .kt-portlet__head .kt-portlet__head-label .kt-portlet__head-title {
+            font-weight: 700;
+        }
+        #map_canvas {
+              height: 350px;
+        }
+    </style>
+{% endput %}
+{% put scripts %}
+<script src="{{ 'assets/admin/vendors/custom/geocomplete/jquery.geocomplete.js'|theme }}" type="text/javascript"></script>
+<script src="//maps.googleapis.com/maps/api/js?libraries=places&key={{settings.google.map.key}}"></script>
+<script type="text/javascript">
+KTUtil.ready(function () {
+    $( ".kt_form" ).validate({
+        ignore: ":hidden",
+        invalidHandler: function(event, validator) {
+            var alert = $('.kt_form_msg');
+            alert.removeClass('kt--hide').show();
+            KTUtil.scrollTop();
+        }
+    });
+
+    $("#address").geocomplete({
+            map: "#map_canvas",
+            mapOptions: {
+                zoom: 18
+            },
+            markerOptions: {
+                draggable: true
+            },
+            details: ".location-complete",
+            {% if item.lat %}
+                location: [{{item.lat}},{{item.lng}}]
+            {% endif %}
+        });
+        $("#address").bind("geocode:dragged", function(event, latLng){
+            $("input[name=lat]").val(latLng.lat());
+            $("input[name=lng]").val(latLng.lng());
+            $("#reset").show();
+    });
+
+});
+</script>
+{% endput %}

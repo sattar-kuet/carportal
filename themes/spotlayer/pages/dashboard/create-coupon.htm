@@ -1,0 +1,289 @@
+title = "Create New Coupon"
+url = "/dashboard/coupon/create"
+layout = "admin"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "dashboard/shipments"
+menu_breadcrumb = "order"
+hide_crumb = 0
+remove_crumb_trail = 0
+crumb_disabled = 0
+multiselect = 1
+
+[viewBag]
+==
+<?php
+use System\Models\File;
+use ItScholarBd\Api\Models\Coupon;
+use ItScholarBd\Api\Models\Category;
+use Illuminate\Validation\Rule;
+use ItScholarBd\Api\Classes\Utility;
+
+function onInit(){
+
+    $setting =   \Spot\Shipment\Models\Settings::where('item','acme_demo_settings')->first();
+}
+
+function onStart() {
+    if(!Auth::getUser()->hasUserPermission(["shop"],'c')) {
+        \Flash::error($this['theme_lang']['not_allowed']);
+        return Redirect::to('dashboard/settings');
+    }
+  $categoryWithShops  =   Category::select('id','name')->with(array('shops'=>function($query){
+        $query->select('*')->where('status',1);
+    }))->get();
+   
+  //  echo '<pre>'; print_r($categoryWithShops->toArray()); exit;
+    $this['categoryWithShops'] = Utility::removeCateogoryWithoutShop($categoryWithShops);
+
+    //echo '<pre>'; print_r($categoryWithShops); exit;
+    $this->page->stretch     = true;
+}
+
+function onSave()
+{
+    if(!Auth::getUser()->hasUserPermission(["coupon"],'c')) {
+        throw new ApplicationException($this['theme_lang']['not_allowed']);
+    }
+
+    $coupon = post();
+   // print_r($coupon); exit;
+    extract($coupon);
+    unset($coupon['shop_ids']);
+   // print_r($shop_ids); exit;
+    $validator = Validator::make($coupon, [
+            'code' => [
+                'required',
+                Rule::unique('coupons')->where(function ($query) use($code) {
+                    return $query->where('code', $code);
+                    //->where('shop_category_id', $shop_category_id);
+                }),
+            ],
+        ]
+    );
+    
+    if($validator->fails()){
+     throw new ApplicationException('This code already Exist');
+    }
+
+   
+    $coupon['validity'] = date("Y-m-d 23:59:59", strtotime($coupon['validity']));
+    $couponModel = new Coupon;
+    foreach ($coupon as $key => $value) {
+        $couponModel->$key = $value;
+    }
+    $filtered_shop_ids = [];
+    foreach ($shop_ids as $shop_id) {
+        $filtered_shop_ids[] = ['shop_id'=>$shop_id];
+    }  
+    $couponModel->shop_ids = json_encode($filtered_shop_ids);
+
+    $couponModel->save();
+    
+    \Flash::success($this['theme_lang']['created_successfully']);
+    return Redirect::to('dashboard/coupons');
+}
+
+?>
+==
+
+
+<form data-request="onSave" data-request-files data-request-flash id="kt_form" class="kt_form">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="kt-portlet kt-portlet--mobile">
+                <div class="kt-portlet__head">
+                    <div class="kt-portlet__head-label">
+                        <h3 class="kt-portlet__head-title">
+                            {{'Coupon information'|__}}
+                        </h3>
+                    </div>
+                </div>
+                <div class="kt-portlet__body">
+                    <div class="form-group form-group-last kt-hide">
+                        <div class="alert alert-danger kt_form_msg" role="alert">
+                            <div class="alert-icon"><i class="flaticon-warning"></i></div>
+                            <div class="alert-text">
+                                {{'Oh snap! Change a few things up and try submitting again'|__}}.
+                            </div>
+                            <div class="alert-close">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true"><i class="la la-close"></i></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="form-group col-lg-6">
+                            <label>{{'Code'|__}}&nbsp;<span
+                                    class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input type="text" class="form-control" name="code" required>
+                        </div>
+                        <div class="form-group col-lg-6">
+                            <label>{{'Discount'|__}}&nbsp;<span
+                                    class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <div class="input-group">
+
+                                <input class="form-control decimal " type="text" name="discount" required>
+
+                                <div class="input-group-append">
+                                    <span class="input-group-text" style="padding: 0px;">
+                                        <select class="form-control" name="type">
+                                            <option value="1">Absolute</option>
+                                            <option value="2">Percentage</option>
+                                        </select>
+                                    </span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label>{{'Applied For'|__}}&nbsp;<span
+                                    class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <select id='optgroup' multiple='multiple' name="shop_ids[]">
+                                {% for categoryWithShop in categoryWithShops %}
+                                <optgroup label='{{categoryWithShop.categoryName}}'>
+                                    {% for shop in categoryWithShop.shops %}
+                                    <option value='{{shop.id}}'>{{shop.name}}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-lg-6">
+                            <label>{{'Minimum Order'|__}}&nbsp;<span
+                                    class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <div class="input-group">
+                                {% if primary_currency.place_symbol_before == 1 %}
+                                <div class="input-group-prepend"><span
+                                        class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                                <input class="form-control decimal " type="text" name="min_order" required>
+                                {% if primary_currency.place_symbol_before == 0 %}
+                                <div class="input-group-append"><span
+                                        class="input-group-text">{{primary_currency.currency_symbol}}</span></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-group col-lg-6">
+                            <label>{{'Validity'|__}}&nbsp;<span
+                                    class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                            <input type="text" id="datetimepicker" class="form-control" name="validity">
+
+                        </div>
+
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="kt-portlet">
+                <div class="kt-portlet__foot">
+                    <div class="row">
+                        <div class="col-lg-12">
+
+                            <button type="submit" class="btn btn-success save">{{'Save'|__}}</button>
+                            <span class="kt-margin-left-10">{{'or'|__}} <a href="{{this.page.child_of|page}}"
+                                    class="kt-link">{{'Cancel'|__}}</a></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ form_close() }}
+
+    {% put styles %}
+    <style>
+        .table-bordered tr td:first-child {
+            width: 200px;
+            font-weight: bold;
+        }
+
+        .map_canvas {
+            height: 350px;
+        }
+
+        .filter-option-inner br {
+            display: none;
+        }
+
+        .select2 {
+            width: 100% !important;
+        }
+
+        .select2-selection {
+            min-height: 36px !important;
+        }
+
+        #addnewsender,
+        #addnewsenderaddress,
+        #addnewreceiver,
+        #addnewreceiveraddress {
+            box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.3);
+        }
+
+        .kt-portlet .kt-portlet__head .kt-portlet__head-label .kt-portlet__head-title {
+            font-weight: 700;
+        }
+
+        #map_canvas {
+            height: 350px;
+        }
+    </style>
+    {% endput %}
+    {% put scripts %}
+    <script src="{{ 'assets/admin/vendors/custom/geocomplete/jquery.geocomplete.js'|theme }}"
+        type="text/javascript"></script>
+    <script src="//maps.googleapis.com/maps/api/js?libraries=places&key={{settings.google.map.key}}"></script>
+    <script type="text/javascript">
+        KTUtil.ready(function () {
+            $(".kt_form").validate({
+                ignore: ":hidden",
+                invalidHandler: function (event, validator) {
+                    var alert = $('.kt_form_msg');
+                    alert.removeClass('kt--hide').show();
+                    KTUtil.scrollTop();
+                }
+            });
+            $("#address").geocomplete({
+                map: "#map_canvas",
+                mapOptions: {
+                    zoom: 18
+                },
+                markerOptions: {
+                    draggable: true
+                },
+                details: ".location-complete",
+                autoselect: true,
+                location: [25.185073988520486, 55.2768490558197]
+            });
+
+            $("#address").bind("geocode:dragged", function (event, latLng) {
+                $("input[name=lat]").val(latLng.lat());
+                $("input[name=lng]").val(latLng.lng());
+                $("#reset").show();
+            });
+        });
+    </script>
+    {% endput %}

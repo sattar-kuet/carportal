@@ -1,0 +1,471 @@
+title = "Create New Client"
+url = "/dashboard/clients/create"
+layout = "admin"
+is_hidden = 0
+role = 0
+permission = 0
+anonymous_only = 0
+logged_only = 1
+child_of = "dashboard/clients"
+menu_breadcrumb = "client"
+hide_crumb = 0
+remove_crumb_trail = 0
+crumb_disabled = 0
+
+[viewBag]
+==
+<?php
+function onStart() {
+    if(!Auth::getUser()->hasUserPermission(["client"],'c')) {
+        \Flash::error($this['theme_lang']['not_allowed']);
+        return Redirect::to('dashboard/clients');
+    }
+    $this['countries']      =   \RainLab\Location\Models\Country::where('is_enabled', 1)->get();
+}
+
+function onListstates(){
+    if(null !== post('id')){
+        $items          = RainLab\Location\Models\State::where('country_id', post('id'))->get();
+        $html = '<option data-hidden="true"></option>';
+        if($items){
+            foreach($items as $item){
+                $html .= '<option value="'.$item->id.'">'.$item->name.'</option>';
+            }
+
+        }
+        return array('html'=>$html);
+    }
+}
+function onListcities(){
+    if(null !== post('id')){
+        $items          = Spot\Shipment\Models\City::where('state_id', post('id'))->get();
+        $html = '<option data-hidden="true"></option>';
+        if($items){
+            foreach($items as $item){
+                $html .= '<option value="'.$item->id.'">'.$item->name.'</option>';
+            }
+
+        }
+        return array('html'=>$html);
+    }
+}
+function onListareas(){
+    if(null !== post('id')){
+        $items          = Spot\Shipment\Models\Area::where('city_id', post('id'))->get();
+        $html = '<option data-hidden="true"></option>';
+        if($items){
+            foreach($items as $item){
+                $html .= '<option value="'.$item->id.'">'.$item->name.'</option>';
+            }
+
+        }
+        return array('html'=>$html);
+    }
+}
+function onSave()
+{
+    if(!Auth::getUser()->hasUserPermission(["client"],'c')) {
+        throw new ApplicationException($this['theme_lang']['not_allowed']);
+    }
+    $data = post();
+
+    \RainLab\User\Models\User::extend(function($model){
+        $myrules['email'] = 'required|between:6,255|email|unique:users';
+        $myrules['mobile'] = 'required|unique:users';
+        $myrules['username'] = 'required|between:2,255|unique:users';
+        $myrules['password'] = 'required';
+        $model->rules = $myrules;
+        $model->customMessages['mobile.unique'] = $this['theme_lang']['mobile_already_registered'];
+        $model->customMessages['email.unique'] = $this['theme_lang']['email_already_registered'];
+        $model->customMessages['username.unique'] = $this['theme_lang']['username_already_registered'];
+    });
+
+    $item                   = new \RainLab\User\Models\User;
+    $item->name             = htmlspecialchars($data['name']);
+    $item->email            = htmlspecialchars($data['email']);
+    $item->username         = htmlspecialchars($data['username']);
+    if(isset($data['password']) && $data['password'] != null && !empty($data['password']) && $data['password'] != ''){
+        if(isset($data['password_confirmation']) && $data['password_confirmation'] != null && !empty($data['password_confirmation']) && $data['password_confirmation'] != '' && $data['password_confirmation'] == $data['password']){
+            $password                       = \Hash::make($data['password']);
+            $item->password                 = $password;
+            $item->password_confirmation    = $password;
+        }
+    }
+    if(isset($data['mobile']) && $data['mobile'] != ''){
+        $item->mobile           = htmlspecialchars($data['mobile']);
+    }
+    if(isset($data['phone']) && $data['phone'] != ''){
+        $item->phone            = htmlspecialchars($data['phone']);
+    }
+    if(isset($data['gender']) && $data['gender'] != ''){
+        $item->gender           = htmlspecialchars($data['gender']);
+    }
+    $item->role_id          = 5;
+    $item->is_activated     = 1;
+    $item->activated_at     = \Carbon\Carbon::now();
+    $item->created_at       = \Carbon\Carbon::now();
+    $item->updated_at       = \Carbon\Carbon::now();
+    $item->save();
+
+    if(isset($data['password']) && $data['password'] != null && !empty($data['password']) && $data['password'] != ''){
+        if(isset($data['password_confirmation']) && $data['password_confirmation'] != null && !empty($data['password_confirmation']) && $data['password_confirmation'] != '' && $data['password_confirmation'] == $data['password']){
+            \RainLab\User\Models\User::where('id', $item->id)->update(['password' => \Hash::make($data['password']) ]);
+        }
+    }
+
+    foreach($data['addresses'] as $address){
+        $subitem                    = new \Spot\Shipment\Models\Address;
+        $subitem->user_id           = $item->id;
+        $subitem->name              = htmlspecialchars($address['name']);
+        $subitem->street            = htmlspecialchars($address['street_address']);
+        $subitem->county            = htmlspecialchars($address['county']);
+        $subitem->city              = htmlspecialchars($address['city']);
+        $subitem->state             = htmlspecialchars($address['state']);
+        $subitem->zipcode           = htmlspecialchars($address['postal_code']);
+        $subitem->country           = htmlspecialchars($address['country']);
+        $subitem->lat               = htmlspecialchars($address['lat']);
+        $subitem->lng               = htmlspecialchars($address['lng']);
+        $subitem->url               = htmlspecialchars($address['url']);
+        $subitem->default           = htmlspecialchars($address['default']);
+        $subitem->created_at        = \Carbon\Carbon::now();
+        $subitem->updated_at        = \Carbon\Carbon::now();
+        $subitem->save();
+    }
+
+
+    $event_data =   array(
+        'persons'   =>  [$item->id],
+        'sender'    =>  Auth::getUser(),
+        'item'      =>  $item,
+        'type'      =>  'new_account',
+        'thumb'     =>  'icon',
+        'icon'      =>  'flaticon-gift',
+        'subject'   =>  $this['theme_lang']['new_account'],
+        'message'   =>  $this['theme_lang']['new_account'],
+        'url'       =>  url('dashboard/shipments/'.$item->id.'/view'),
+        'badge'     =>  'success',
+    );
+    \Event::fire('spot.event', [$this['pusher'],$this['settings'],$event_data]);
+
+    \Flash::success($this['theme_lang']['created_successfully']);
+    return Redirect::to('dashboard/clients');
+}
+?>
+==
+<div class="row">
+   	<div class="col-lg-12">
+        <div class="kt-portlet kt-portlet--tabs">
+            {{ form_ajax('onSave', { success: 'created successfully!', flash: true, class: 'kt_form' }) }}
+                <div class="kt-portlet__body">
+                    <div class="form-group form-group-last kt-hide">
+        				<div class="alert alert-danger kt_form_msg" role="alert">
+        					<div class="alert-icon"><i class="flaticon-warning"></i></div>
+        				  	<div class="alert-text">
+                                {{'Oh snap! Change a few things up and try submitting again'|__}}.
+        					</div>
+        					<div class="alert-close">
+        						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        					    	<span aria-hidden="true"><i class="la la-close"></i></span>
+        					  	</button>
+        					</div>
+        				</div>
+        			</div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Full Name'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <div class="col-lg-9 col-xl-6">
+        					<input type="text" class="form-control" name="name" required />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Email'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <div class="col-lg-9 col-xl-6">
+        					<input type="email" class="form-control" name="email" required />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Username'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <div class="col-lg-9 col-xl-6">
+        					<input type="text" class="form-control" name="username" required />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Password'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <div class="col-lg-9 col-xl-6">
+        					<input type="password" class="form-control" name="password" required />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Password Confirmation'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                        <div class="col-lg-9 col-xl-6">
+        					<input type="password" class="form-control" name="password_confirmation" required />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Mobile Number'|__}}</label>
+                        <div class="col-lg-9 col-xl-6">
+        					<input type="text" class="form-control" name="mobile" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Phone Number'|__}}</label>
+                        <div class="col-lg-9 col-xl-6">
+        					<input type="text" class="form-control" name="phone" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-xl-3 col-lg-3 col-form-label">{{'Gender'|__}}</label>
+                        <div class="col-lg-9 col-xl-6">
+                            <div class="kt-radio-inline">
+    							<label class="kt-radio">
+    								<input type="radio" name="gender" class="gender" value="male"> {{'Male'|__}}
+    								<span></span>
+    							</label>
+    							<label class="kt-radio">
+    								<input type="radio" name="gender" class="gender" value="female"> {{'Female'|__}}
+    								<span></span>
+    							</label>
+    						</div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <h4 class="col-xl-12 kt-font-boldest">{{'Addresses'|__}}</h4>
+                        <div class="col-lg-12">
+
+                            <div id="kt_repeater_addresses">
+                                <div class="form-group form-group-last row">
+                                    <div data-repeater-list="addresses" class="col-lg-12">
+                                        <div data-repeater-item class="align-items-center first-child">
+                                            <div class="location">
+                                                <div class="row">
+                                                    <div class="form-group col-lg-6">
+                                                        <label>{{'Name'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                                                        <input type="text" class="form-control" name="name" required/>
+                                                    </div>
+                                                    <div class="form-group col-lg-6">
+                                                        <label>{{'Default Address'|__}}</label>
+                                                        <div class="kt-radio-inline">
+                                							<label class="kt-radio">
+                                								<input type="radio" name="default" value="1"> {{'Yes'|__}}
+                                								<span></span>
+                                							</label>
+                                							<label class="kt-radio">
+                                								<input type="radio" name="default" value="0" checked> {{'No'|__}}
+                                								<span></span>
+                                							</label>
+                                						</div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="form-group col-lg-5">
+                                                        <label>{{'Address'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                                                        <input type="text" class="form-control address street_addr" data-location="route" name="street_address" required/>
+                                                        <input type="hidden" class="form-control lat" data-location="lat" name="lat" />
+                                                        <input type="hidden" class="form-control lng" data-location="lng" name="lng" />
+                                                        <input type="hidden" class="form-control url" data-location="url" name="url" />
+                                                    </div>
+                                                    <div class="form-group col-lg-4">
+                                                        <label>{{'Country'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                                                        <select class="form-control country_id" data-location="country" data-live-search="true" name="country" required>
+                                                            <option data-hidden="true"></option>
+                                                            {% for country in countries %}
+                                                                <option value="{{country.id}}" {% if currentLang != 'en' %}data-subtext="{{country.lang(currentLang).name}} "{% endif %}>{{country.lang('en').name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-lg-3">
+                                                        <label>{{'Postal Code'|__}}</label>
+                                                        <input class="form-control postal_code" type="text" data-location="postal_code" name="postal_code" >
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="form-group col-lg-4">
+                                                        <label>{{'State / Region'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                                                        <select class="form-control state_id" data-location="administrative_area_level_1" title="{{'Please select country first'|__}}" name="state" data-live-search="true" required>
+                                                            <option data-hidden="true"></option>
+                                                            {% for state in states %}
+                                                                <option value="{{state.id}}" {% if currentLang != 'en' %}data-subtext="{{state.lang(currentLang).name}}"{% endif %}>{{state.lang('en').name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-lg-4">
+                                                        <label>{{'City'|__}}&nbsp;<span class="kt-badge kt-badge--danger kt-badge--dot"></span></label>
+                                                        <select class="form-control city_id" data-location="locality" name="city" title="{{'Please select state first'|__}}" data-live-search="true" required>
+                                                            <option data-hidden="true"></option>
+                                                            {% for city in cities %}
+                                                                <option value="{{city.id}}">{{city.name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-lg-4">
+                                                        <label>{{'County'|__}}</label>
+                                                        <select class="form-control area_id" data-location="sublocality" name="county" title="{{'Please select city first'|__}}" data-live-search="true" >
+                                                            <option data-hidden="true"></option>
+                                                            {% for county in areas %}
+                                                                <option value="{{county.id}}">{{county.name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="form-group col-lg-12">
+                                                        <label>{{'Google Map'|__}}</label>
+                                                        <div class="col-sm-12 map_canvas"></div>
+                                                        <span class="form-text text-muted">{{'Change the pin to select the right location'|__}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <div class="col-md-3">
+                                                    <a href="javascript:;" data-repeater-delete="" class="btn-sm btn btn-label-danger btn-bold kt-margin-t-25 delete_btn">
+                                                        <i class="la la-trash-o"></i>
+                                                        {{'Delete'|__}}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+                                 <div class="form-group form-group-last row">
+                                     <label class="col-xl-12 col-form-label kt-align-left">
+                                         <a href="javascript:;" data-repeater-create="" class="btn btn-bold btn-label-brand">
+                                             <i class="la la-plus"></i> {{'Add Another Address'|__}}
+                                         </a>
+                                     </label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+        		<div class="kt-portlet__foot">
+        			<div class="row">
+        				<div class="col-lg-8">
+                        </div>
+        				<div class="col-lg-4">
+        					<button type="submit" class="btn btn-primary">{{'Save'|__}}</button>
+        					<span class="kt-margin-left-10">{{'or'|__}} <a href="{{url('dashboard/clients')}}" class="kt-link">{{'Cancel'|__}}</a></span>
+        				</div>
+        			</div>
+        		</div>
+        	{{ form_close() }}
+        </div>
+    </div>
+</div>
+
+
+{% put styles %}
+    <style>
+        .map_canvas {
+          height: 350px;
+        }
+    </style>
+{% endput %}
+{% put scripts %}
+<script src="{{ 'assets/admin/vendors/custom/geocomplete/jquery.geocomplete.js'|theme }}" type="text/javascript"></script>
+<script src="//maps.googleapis.com/maps/api/js?libraries=places&key={{settings.google.map.key}}"></script>
+<script type="text/javascript">
+    $( ".kt_form" ).validate({
+        // define validation rules
+        /*
+        rules: {
+            digits: {
+                required: true,
+                digits: true,
+                creditcard: true,
+                phoneUS: true,
+                required: true,
+                minlength: 10,
+                maxlength: 100
+            },
+        },
+        */
+
+        //display error alert on form submit
+        invalidHandler: function(event, validator) {
+            var alert = $('.kt_form_msg');
+            alert.removeClass('kt--hide').show();
+            KTUtil.scrollTop();
+        },
+
+        submitHandler: function (form) {
+            form[0].submit(); // submit the form
+        }
+    });
+
+    $("#kt_repeater_addresses").repeater({
+        initEmpty: true,
+        show: function() {
+            var repeater_item = $(this);
+            repeater_item.find('select').selectpicker('destroy');
+            repeater_item.find('select').selectpicker();
+            var map_canvas  = repeater_item.find(".map_canvas");
+            var map_data    = repeater_item.find(".location");
+            repeater_item.find(".address").geocomplete({
+                map: map_canvas,
+                mapOptions: {
+                    zoom: 18
+                },
+                markerOptions: {
+                    draggable: true
+                },
+                details: map_data,
+                detailsAttribute: "data-location",
+                autoselect: true,
+            });
+            repeater_item.find(".address").bind("geocode:dragged", function(event, latLng){
+                repeater_item.find("input[data-location=lat]").val(latLng.lat());
+                repeater_item.find("input[data-location=lng]").val(latLng.lng());
+            });
+            repeater_item.slideDown();
+
+
+            repeater_item.on('changed.bs.select', '.country_id', function(e, clickedIndex, newValue, oldValue){
+                var selected = $(e.currentTarget).val();
+                if(selected != ''){
+                    $.request('onListstates', {
+                        data: {id: selected},
+                        success: function(data) {
+                            repeater_item.find('.state_id').selectpicker("destroy");
+                            repeater_item.find('.state_id').attr('title', '{{"Nothing Selected"|__}}');
+                            repeater_item.find('.state_id').html(data.html);
+                            repeater_item.find('.state_id').selectpicker("refresh");
+                        }
+                    });
+                }
+            });
+            repeater_item.on('changed.bs.select', '.state_id', function(e, clickedIndex, newValue, oldValue){
+                var selected = $(e.currentTarget).val();
+                if(selected != ''){
+                    $.request('onListcities', {
+                        data: {id: selected},
+                        success: function(data) {
+                            repeater_item.find('.city_id').selectpicker("destroy");
+                            repeater_item.find('.city_id').attr('title', '{{"Nothing Selected"|__}}');
+                            repeater_item.find('.city_id').html(data.html);
+                            repeater_item.find('.city_id').selectpicker("refresh");
+                        }
+                    });
+                }
+            });
+            repeater_item.on('changed.bs.select', '.city_id', function(e, clickedIndex, newValue, oldValue){
+                var selected = $(e.currentTarget).val();
+                if(selected != ''){
+                    $.request('onListareas', {
+                        data: {id: selected},
+                        success: function(data) {
+                            repeater_item.find('.area_id').selectpicker("destroy");
+                            repeater_item.find('.area_id').attr('title', '{{"Nothing Selected"|__}}');
+                            repeater_item.find('.area_id').html(data.html);
+                            repeater_item.find('.area_id').selectpicker("refresh");
+                        }
+                    });
+                }
+            });
+        },
+        hide: function(e) {
+            $(this).slideUp(e);
+        }
+    });
+</script>
+{% endput %}

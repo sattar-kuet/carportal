@@ -1,0 +1,6 @@
+plugin:
+    name: 'itscholarbd.api::lang.plugin.name'
+    description: 'itscholarbd.api::lang.plugin.description'
+    author: 'ItScholarbd.com'
+    icon: oc-icon-mobile
+    homepage: ''

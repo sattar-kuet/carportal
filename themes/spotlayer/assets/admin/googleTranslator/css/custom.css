@@ -1,0 +1,65 @@
+/*
+################################################
+Google Translator
+################################################
+*/
+ .goog-te-banner-frame {display:none;} // Don't show Google Topbar
+ #goog-gt-tt {display:none!important;visibility:hidden!important;}
+
+
+.goog-te-gadget {
+  font-family: Roboto, 'Open Sans', sans-serif!important;
+  text-transform: uppercase;
+}
+.goog-te-gadget-simple  {
+  background-color: rgba(255,255,255,0.20)!important;
+  border: 1px solid rgba(255,255,255,0.50) !important;
+  padding: 8px!important;
+  border-radius: 4px!important;
+  font-size: 1rem!important;
+  line-height:2rem!important;
+  display: inline-block;
+  cursor: pointer;
+  zoom: 1;
+}
+.goog-te-menu2 {
+  max-width: 100%;
+}
+.goog-te-menu-value {
+  color: #fff !important;
+    &:before {
+    font-family: 'Material Icons';
+    content: "\E927";
+    margin-right: 16px;
+    font-size: 2rem;
+    vertical-align: -10px;
+    // width:32px!important;
+  } 
+}
+.goog-te-menu-value span:nth-child(5) {
+  display:none;
+}
+.goog-te-menu-value span:nth-child(3) {
+  border:none!important;
+  font-family: 'Material Icons';
+  &:after {
+    font-family: 'Material Icons';
+    content: "\E5C5";
+    font-size: 1.5rem;
+    vertical-align: -6px;
+  }  
+}
+
+.goog-te-gadget-icon {
+    background-image: url(../image/languageIcon.png)!important;
+    background-position: 0px 0px;
+    height: 32px!important;
+    width: 32px!important;
+    margin-right: 8px!important;
+    //     OR
+    display: none;
+}
+
+// ============ HIDE TOP BAR ============ 
+.goog-te-banner-frame.skiptranslate {display: none!important;} 
+body {top: 0px!important;}
